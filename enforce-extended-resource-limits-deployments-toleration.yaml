@@ -1,0 +1,39 @@
+# This ClusterPolicy checks if a Deployment has a toleration for gpu=true with effect 'NoSchedule'
+# If found, it checks the Pod template for the extended resource limit for example.com/foo. If such is not found, it is added with value 0.
+# This policy is not applied if the Deployment contains the label opendatahub.io/dashboard with value "true", because this indicates it was deployed via OpenShift AI.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: enforce-extended-resource-limits-deployments-toleration
+spec:
+  validationFailureAction: audit # Change to "enforce" to enforce the policy
+  rules:
+    - name: enforce-extended-resource-on-deployments
+      match:
+        any:
+        - resources:
+            kinds:
+              - Deployment
+      exclude:
+        any:
+          resources:
+            selector:
+              matchLabels:
+                opendatahub.io/dashboard: "true"
+      preconditions:
+        all:
+          - key: "{{ request.object.spec.template.spec.tolerations | contains({key: 'gpu', value: 'true', effect: 'NoSchedule'}) }}"
+            operator: Equals
+            value: true
+      mutate:
+        targets:
+          - kind: Deployment
+        patchStrategicMerge:
+          spec:
+            template:
+              spec:
+                containers:
+                  - (name): "*"
+                    resources:
+                      limits:
+                        example.com/foo: "{{ request.object.spec.template.spec.containers[].resources.limits['example.com/foo'] | default(0) }}"
