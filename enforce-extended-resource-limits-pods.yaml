@@ -4,7 +4,7 @@
 apiVersion: kyverno.io/v1
 kind: ClusterPolicy
 metadata:
-  name: enforce-extended-resource-limits
+  name: enforce-extended-resource-limits-pods
 spec:
   validationFailureAction: audit # Change to "enforce" to enforce the policy.
   rules:
