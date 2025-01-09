@@ -1,0 +1,32 @@
+# This ClusterPolicy checks if a Pod has been scheduled on nodes M or N.
+# If yes, we check each container of the Pod for extended resource limit for example.com/foo.
+# If such is not found, it is added with value 0.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: enforce-extended-resource-limits
+spec:
+  validationFailureAction: audit # Change to "enforce" to enforce the policy.
+  rules:
+    - name: enforce-extended-resource-on-nodes
+      match:
+        resources:
+          kinds:
+            - Pod
+      preconditions:
+        all:
+          - key: "{{ request.object.spec.nodeName }}"
+            operator: In
+            value:
+              - M
+              - N
+      mutate:
+        targets:
+          - kind: Pod
+        patchStrategicMerge:
+          spec:
+            containers:
+              - (name): "*"
+                resources:
+                  limits:
+                    example.com/foo: "{{ request.object.spec.containers[].resources.limits['example.com/foo'] | default(0) }}"
