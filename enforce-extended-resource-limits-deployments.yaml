@@ -10,9 +10,10 @@ spec:
   rules:
     - name: enforce-extended-resource-on-deployments
       match:
-        resources:
-          kinds:
-            - Deployment
+        any:
+        - resources:
+            kinds:
+              - Deployment
       exclude:
         any:
           resources:
