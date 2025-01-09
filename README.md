@@ -1,1 +1,1 @@
-# openshift-ai-kyverno-samples
+# ocp-ai-gpu-adm-ctl-kyverno
